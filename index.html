@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Comparaciones estructurales 3D</title>
+
+<script src="https://cdn.jsdelivr.net/npm/ngl@2.4.0/dist/ngl.js"></script>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f6fa;
+}
+header {
+    background: white;
+    padding: 20px;
+    text-align: center;
+}
+h2 { margin-top: 0; }
+select, button {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: white;
+    cursor: pointer;
+}
+#viewport {
+    width: 100%;
+    height: 76vh;
+    background: white;
+}
+#estado { font-size: 14px; }
+</style>
+</head>
+
+<body>
+
+<header>
+<h2>Comparaciones estructurales interactivas</h2>
+
+<select id="proteina">
+<option value="Bz0_experimental_vs_refinado.pdb">Bz0</option>
+<option value="Bz1_experimental_vs_refinado.pdb">Bz1</option>
+<option value="Bz2_experimental_vs_refinado.pdb">Bz2</option>
+<option value="TauII_experimental_vs_refinado.pdb">Taumatina II</option>
+</select>
+
+<button onclick="cargar()">Visualizar</button>
+<button onclick="centrar()">Centrar</button>
+
+<p>
+🔵 Cadena A &nbsp;&nbsp; 🌸 Cadena B
+</p>
+
+<p>Arrastrar para rotar · Rueda del ratón para ampliar</p>
+<p id="estado">Iniciando...</p>
+</header>
+
+<div id="viewport"></div>
+
+<script>
+let stage;
+
+function centrar() {
+    if (stage) stage.autoView();
+}
+
+async function cargar() {
+    const archivo = document.getElementById("proteina").value;
+    const estado = document.getElementById("estado");
+
+    estado.textContent = "Cargando " + archivo;
+
+    try {
+        stage.removeAllComponents();
+
+        const componente = await stage.loadFile(
+            "./" + archivo,
+            {
+                ext: "pdb",
+                defaultRepresentation: false
+            }
+        );
+
+        componente.addRepresentation("cartoon", {
+            sele: ":A",
+            color: "#79c8ee",
+            quality: "high"
+        });
+
+        componente.addRepresentation("cartoon", {
+            sele: ":B",
+            color: "#f29cbd",
+            quality: "high",
+            opacity: 0.85
+        });
+
+        componente.autoView();
+
+        estado.textContent = "Modelo cargado: " + archivo;
+
+    } catch (error) {
+        console.error(error);
+        estado.textContent = "Error: " + error.message;
+    }
+}
+
+window.addEventListener("load", () => {
+    const estado = document.getElementById("estado");
+
+    if (typeof NGL === "undefined") {
+        estado.textContent = "No se pudo cargar la biblioteca NGL.";
+        return;
+    }
+
+    stage = new NGL.Stage("viewport", {
+        backgroundColor: "white"
+    });
+
+    window.addEventListener("resize", () => stage.handleResize());
+
+    document.getElementById("proteina")
+        .addEventListener("change", cargar);
+
+    cargar();
+});
+</script>
+
+</body>
+</html>
